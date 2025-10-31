@@ -100,3 +100,62 @@ except Exception as e:
 # Sidebar (informativo)
 # =========================
 with st.sidebar:
+    st.subheader("📘 Información del Modelo")
+    st.markdown("""
+    Este modelo fue **entrenado en Teachable Machine (Google)** 🧠  
+    y adaptado a **Keras (.h5)** para predicción local.  
+    - 🔍 Entrada: Imágenes 224x224  
+    - ⚙️ Normalización: [-1, 1]  
+    - 📈 Salida: Probabilidad por clase  
+    """)
+
+# =========================
+# Captura de imagen desde cámara
+# =========================
+img_file_buffer = st.camera_input("📸 Toma una Foto para analizar")
+
+if img_file_buffer is not None:
+    # Leer imagen
+    image = Image.open(img_file_buffer)
+    st.image(image, caption="🖼️ Imagen capturada", width=350)
+
+    # Redimensionar y preparar la imagen
+    newsize = (224, 224)
+    img = image.resize(newsize)
+    img_array = np.array(img)
+
+    # Normalización
+    normalized_image_array = (img_array.astype(np.float32) / 127.0) - 1
+
+    # Crear batch de entrada
+    data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+    data[0] = normalized_image_array
+
+    # =========================
+    # Predicción
+    # =========================
+    with st.spinner("🧮 Procesando imagen..."):
+        prediction = model.predict(data)
+    
+    st.subheader("📊 Resultados de la predicción")
+    st.write(f"📈 Vector de salida: `{prediction[0]}`")
+
+    # Mostrar resultados interpretables
+    if prediction[0][0] > 0.5:
+        st.success(f"⬅️ **Izquierda**, probabilidad: `{round(prediction[0][0], 3)}`")
+    elif prediction[0][1] > 0.5:
+        st.success(f"⬆️ **Arriba**, probabilidad: `{round(prediction[0][1], 3)}`")
+    else:
+        st.info("⚙️ Ninguna clase supera el umbral de 0.5 — intenta otra imagen.")
+
+# =========================
+# Pie de página
+# =========================
+st.markdown("---")
+st.markdown("""
+**VisionAI Tech Mode 🤖**  
+Sistema de reconocimiento visual desarrollado con **Keras + Streamlit**.  
+Entrenado mediante **Teachable Machine**, optimizado para predicción en tiempo real.  
+> “Where Machine Learning meets Vision.” ⚡
+""")
+st.caption("© 2025 | Tech Vision Labs 🧠")
